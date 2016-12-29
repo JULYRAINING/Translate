@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+  
+  <head>
+  {% load static %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    
+  
+    
+    
+    <script type="text/javascript" src="{% static 'tools/js/jquery.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'tools/js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'tools/js/material.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'tools/js/jquery.md5.js' %}"></script>
+    <link href="{% static 'tools/css/bootstrap.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'tools/css/material.css' %}" type="text/css"/>
+    
+  
+  </head>
+
+  
+   <body>
+   
+    <div class="cover">
+     
+      <div class="cover-image" style="background-image: url({% static 'tools/image/sea.jpg' %});"></div>
+      <div class="container" align="center">
+        <div class="row">
+          <div  style="background-color:#ffffff;" class="thumbnail">
+           
+            <br>
+            <div class="row"  align="center" name = "content">
+              <input type = "text" name = "content"
+              id = "material_str"
+              class = "text-input" 
+              placeholder= "input" 
+              style="width:50%"/>
+              <button  class="button raised bg-blue-500 color-white"
+                     id = "translate_btn"
+                     
+                   style="margin-left:0">Search</button>
+            </div>
+            <br>
+            
+          </div>
+          <br>
+          
+          
+           <div  id = "result_div" style="background-color:#ffffff;" class="thumbnail">
+               <h5><h5>  
+            
+          </div>
+        </div>
+        <!--end row-->
+      </div>
+      <!--end container-->
+    </div>
+  </body>
+
+</html>
+
+
+
+
+<script>
+    
+        
+        
+        
+        function translate(){
+            
+            var material = document.getElementById('material_str').value
+            
+            
+            
+            appid = '20161204000033373'
+            secretKey = 'qjpLG2Qms0wdrWDML9Pl'
+    
+            q = material
+            fromLang = 'auto'
+            toLang = 'zh'
+            myurl = 'http://api.fanyi.baidu.com/api/trans/vip/translate'
+            salt = Math.floor((Math.random()*100)+1)
+            
+            sign = appid+q+salt+secretKey
+            
+            sign = $.md5(sign)
+            
+            myurl = myurl+'?appid='+appid+'&q='+q+'&from='+fromLang+'&to='+toLang+'&salt='+salt+'&sign='+sign
+
+            
+            
+            
+            
+            $.ajax({
+                url:myurl,
+                type:'get',
+                dataType:'jsonp',
+                contentType:'application/json',
+                success:function(data) {
+                   
+                    var dataobj = data
+                    
+                    var result = dataobj.trans_result[0].dst
+                    
+                    
+                    
+                    var result_p = document.getElementsByTagName('h5')[0]
+                    
+                    result_p.textContent  = JSON.stringify(dataobj, null, 4)
+                    
+                    save(dataobj);
+                }
+            });
+        }
+        
+        function save(dataobj){
+             data = JSON.stringify(dataobj)
+             console.log(data)
+             var reg = new RegExp(/[;=&]/,"g");
+             data = data.replace(reg, ".")
+             console.log(data)
+             $.ajax({
+                url:'http://localhost:8000/tools/saveRecord?material=' + data,
+                type:'get',
+                dataType:'jsonp',
+                contentType:'application/json',
+                success:function(data) {
+                    console.log('saved');
+                }
+            });
+        }
+        
+        $(function(){ 
+            $(document).keydown(function(event){ 
+            //enter
+            if(event.keyCode==13){ 
+                $("#translate_btn").click(); 
+            } 
+            //delete
+            if(event.keyCode==46){ 
+                document.getElementById('material_str').value = ''
+            }
+            //insert
+            if(event.keyCode==45){ 
+                
+                $('#material_str').focus();
+                $('#material_str').select();
+            } 
+            }); 
+        })
+
+        $('#translate_btn').on('click', translate);
+        
+</script>
